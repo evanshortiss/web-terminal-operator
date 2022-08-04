@@ -57,13 +57,29 @@ Upon startup, the Web Terminal Operator creates two `DevWorkspaceTemplate` custo
 * `web-terminal-tooling` defines the container that contains cluster tooling (e.g. kubectl, oc, etc.) and is where the shell will be opened when creating a web terminal
 * `web-terminal-exec` is a sidecar container that allows the OpenShift cluster to communicate with the Web Terminal, allowing for the requesting user to be automatically logged into the cluster, etc.
 
-To customize Web Terminal Operator functionality, these DevWorkspaceTemplates can be modified, and these changes will be propagated to all Web Terminals on the cluster the next time that terminal is started. To change the image used for the tooling container, for example, it's sufficient to edit the image field in the `web-terminal-tooling` DevWorkspaceTemplate on the cluster.
+To customize Web Terminal Operator functionality, these DevWorkspaceTemplates can be modified, and these changes will be propagated to all Web Terminals on the cluster the next time that terminal is started. To change the image used for the tooling container, for example, it's sufficient to edit the image field in the `web-terminal-tooling` DevWorkspaceTemplate on the cluster. You can find the default tools container source code in [this repository](https://github.com/redhat-developer/web-terminal-tooling). 
 
 By default, the Web Terminal Operator will overwrite any modifications to its DevWorkspaceTemplates when it starts. In order to persist custom changes between Web Terminal Operator versions, the Kubernetes annotation
 ```yaml
 web-terminal.redhat.com/unmanaged-state: "true"
 ```
 should be added to the DevWorkspaceTemplate.
+
+For example, run the following command to change the tools container image:
+
+```bash
+oc patch DevWorkspaceTemplate/web-terminal-tooling --type='json' \
+-p='[{"op": "replace", "path": "/spec/components/0/container/image", "value": "quay.io/youruser/custom-web-terminal:latest"}]' \
+-n openshift-operators
+```
+
+and the following command to persist the change:
+
+```bash
+oc annotate devworkspacetemplate web-terminal-tooling \
+'web-terminal.redhat.com/unmanaged-state=true' \
+-n openshift-operators
+```
 
 
 ## Removing the operator from a cluster
